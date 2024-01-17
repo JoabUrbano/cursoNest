@@ -1,6 +1,8 @@
 // eslint-disable-next-line prettier/prettier
 import { Controller, Get, Param, Post, Body, Patch, Delete } from '@nestjs/common';
 import { CoursesService } from './courses.service';
+import { CreateCourseDto } from './dto/create-course.dto';
+import { UpdateCourseDto } from './dto/update-course.dto';
 
 @Controller('courses')
 export class CoursesController {
@@ -15,12 +17,12 @@ export class CoursesController {
     return this.coursesService.findOneById(id);
   }
   @Post()
-  create(@Body() body) {
-    return this.coursesService.create(body);
+  create(@Body() createCourseDto: CreateCourseDto) {
+    return this.coursesService.create(createCourseDto);
   }
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body) {
-    return this.coursesService.update(body, id);
+  update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto) {
+    return this.coursesService.update(updateCourseDto, id);
   }
   @Delete(':id')
   deleteById(@Param('id') id: string) {

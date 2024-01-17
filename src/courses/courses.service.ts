@@ -1,69 +1,59 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Course } from './entities/course.entity';
+import { CreateCourseDto } from './dto/create-course.dto';
+import { UpdateCourseDto } from './dto/update-course.dto';
 
 @Injectable()
 export class CoursesService {
-  private courses: Course[] = [
-    {
-      id: 1,
-      name: 'Como entrar no SHAPE em 15 dias',
-      description: 'Como ficar sarado, shapado, trincado, bombado em apenas 15 dias',
-      tags: [
-        'Maromba',
-        'Renato Cariani',
-        'Shape',
-        'Projeto verão',
-        'Fitness',
-        'Saude',
-      ],
-    },
-  ];
+  constructor(
+    @InjectRepository(Course)
+    private readonly courseRepository: Repository<Course>,
+  ) {}
 
-  findAll() {
-    return this.courses;
+  async findAll(): Promise<Course[]> {
+    return await this.courseRepository.find();
   }
 
-  findOneById(id: string) {
-    const course = this.courses.find((course) => course.id === Number(id));
+  async findOneById(id: string) {
+    const numberId = Number(id);
+    const course = await this.courseRepository.findOne({
+      where: { id: numberId },
+    });
     if (!course) {
-      throw new HttpException(
-        `Course ID ${id} not found!`,
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException(`Course ID ${id} not found!`);
     } else {
       return course;
     }
   }
 
-  create(createCourseDto: any) {
-    this.courses.push(createCourseDto);
+  async create(createCourseDto: CreateCourseDto) {
+    const newCourse = this.courseRepository.create(createCourseDto);
+    return await this.courseRepository.save(newCourse);
   }
 
-  update(updateCourseDto: any, id: string) {
-    const indexCourse = this.courses.findIndex(
-      (course) => course.id === Number(id),
-    );
-    if (indexCourse >= 0) {
-      this.courses[indexCourse] = updateCourseDto;
-    } else {
-      throw new HttpException(
-        `Course ID ${id} not found!`,
-        HttpStatus.NOT_FOUND,
-      );
+  async update(updateCourseDto: UpdateCourseDto, id: string) {
+    const numberId = Number(id);
+    const course = await this.courseRepository.findOne({
+      where: { id: numberId },
+    });
+    if (!course) {
+      throw new NotFoundException(`Course ID ${id} not updated!`);
     }
+
+    this.courseRepository.merge(course, updateCourseDto);
   }
 
-  remove(id: string) {
-    const indexCourse = this.courses.findIndex(
-      (course) => course.id === Number(id),
-    );
-    if (indexCourse >= 0) {
-      this.courses.splice(indexCourse, 1);
-    } else {
-      throw new HttpException(
-        `Course ID ${id} not removed!`,
-        HttpStatus.NOT_FOUND,
-      );
+  async remove(id: string) {
+    const numberId = Number(id);
+    const course = await this.courseRepository.findOne({
+      where: { id: numberId },
+    });
+    if (!course) {
+      throw new NotFoundException(`Course ID ${id} not removed`);
     }
+
+    await this.courseRepository.remove(course);
   }
 }
